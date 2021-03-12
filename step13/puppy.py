@@ -1,13 +1,12 @@
 import sys
 from flask import Flask, jsonify, request, url_for
 from flask_login import LoginManager, current_user, login_required
+from marshmallow.exceptions import ValidationError
 from models import db, User, Puppy
 from schemas import ma, user_schema, puppy_schema, puppies_schema
 from slugify import slugify
 
-
 login_manager = LoginManager()
-
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///puppy.db"
@@ -57,9 +56,10 @@ def list_puppies():
 
 @app.route("/puppies/", methods=["POST"])
 def create_puppy():
-    puppy, errors = puppy_schema.load(request.form)
-    if errors:
-        resp = jsonify(errors)
+    try:
+        puppy = puppy_schema.load(request.form)
+    except ValidationError as errors:
+        resp = jsonify(errors.messages)
         resp.status_code = 400
         return resp
 
@@ -76,9 +76,10 @@ def create_puppy():
 @app.route("/puppies/<int:id>", methods=["POST"])
 def edit_puppy(id):
     puppy = Puppy.query.get_or_404(id)
-    puppy, errors = puppy_schema.load(request.form, instance=puppy)
-    if errors:
-        resp = jsonify(errors)
+    try:
+        puppy = puppy_schema.load(request.form, instance=puppy)
+    except ValidationError as errors:
+        resp = jsonify(errors.messages)
         resp.status_code = 400
         return resp
 
