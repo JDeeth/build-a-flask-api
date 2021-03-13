@@ -33,7 +33,7 @@ this directory.
 The ``schemas.py`` file defines a Marshmallow schema for a puppy. A schema
 defines how to transform an instance of a class into a dictionary, or vice
 versa. Since we're using the integration systems that I mentioned earlier,
-we can subclass from ModelSchema_, and it knows how to introspect a
+we can subclass from SQLAlchemyAutoSchema_, and it knows how to introspect a
 SQLAlchemy model.
 
 In the ``puppy.py`` file, we've modified the ``get_puppy()`` and
@@ -41,6 +41,11 @@ In the ``puppy.py`` file, we've modified the ``get_puppy()`` and
 method is now *super* tiny: we just run a SQLAlchemy query to get a puppy
 object, and pass that object to the Marshmallow schema. The schema knows
 how to transform that object into a dictionary, and from there, into JSON.
+
+(When this talk was given, the code used the SQLAlchemy's ModelSchema_, but
+this has since been deprecated and replaced with SQLAlchemyAutoSchema_. The
+most obvious difference is that if validation fails, it raises a
+``ValidationError`` exception, instead of returning error values.)
 
 Validation
 ----------
@@ -53,8 +58,8 @@ error ("name required"). Once you fixed that first error, *then* it will tell
 you the next error ("image_url required"), and so on. There was no way to know
 how many problems you actually had! By contrast, the ``puppy_schema.load()``
 function automatically does data validation, and if the validation fails,
-it will return *all* the errors at once in that ``errors`` dictionary, rather
-than just returning the first one. This means that you'll get much more
+it will return *all* the errors at once in that ``ValidationError`` exception,
+rather than just returning the first one. This means that you'll get much more
 informative and useful error messages. Give it a try!
 
 .. code-block:: bash
@@ -92,9 +97,10 @@ and ``image_url``, you can set a list of ``fields`` on the
 
 .. code-block:: python
 
-    class PuppySchema(ma.ModelSchema):
+    class PuppySchema(ma.SQLAlchemyAutoSchema):
         class Meta:
             model = Puppy
+            load_instance = True
             fields = ["name", "image_url"]
 
 `Check out the Marshmallow documentation for more information.
@@ -107,3 +113,4 @@ and ``image_url``, you can set a list of ``fields`` on the
 .. _a Flask extension: https://flask-marshmallow.readthedocs.org
 .. _a SQLAlchemy extension: https://marshmallow-sqlalchemy.readthedocs.org
 .. _ModelSchema: https://marshmallow-sqlalchemy.readthedocs.org/en/latest/api_reference.html#marshmallow_sqlalchemy.ModelSchema
+.. _SQLAlchemyAutoSchema: https://marshmallow-sqlalchemy.readthedocs.io/en/latest/api_reference.html#marshmallow_sqlalchemy.SQLAlchemyAutoSchema

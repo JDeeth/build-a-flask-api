@@ -1,5 +1,6 @@
 import sys
 from flask import Flask, jsonify, request, url_for
+from marshmallow.exceptions import ValidationError
 from models import db, Puppy
 from schemas import ma, puppy_schema
 from slugify import slugify
@@ -19,9 +20,10 @@ def get_puppy(slug):
 
 @app.route("/", methods=["POST"])
 def create_puppy():
-    puppy, errors = puppy_schema.load(request.form)
-    if errors:
-        resp = jsonify(errors)
+    try:
+        puppy = puppy_schema.load(request.form)
+    except ValidationError as errors:
+        resp = jsonify(errors.messages)
         resp.status_code = 400
         return resp
 
@@ -39,9 +41,10 @@ def create_puppy():
 @app.route("/<slug>", methods=["POST"])
 def edit_puppy(slug):
     puppy = Puppy.query.filter(Puppy.slug==slug).first_or_404()
-    puppy, errors = puppy_schema.load(request.form, instance=puppy)
-    if errors:
-        resp = jsonify(errors)
+    try:
+        puppy = puppy_schema.load(request.form, instance=puppy)
+    except ValidationError as errors:
+        resp = jsonify(errors.messages)
         resp.status_code = 400
         return resp
 

@@ -4,9 +4,10 @@ from models import Puppy
 ma = Marshmallow()
 
 
-class PuppySchema(ma.ModelSchema):
+class PuppySchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Puppy
+        load_instance = True
 
 puppy_schema = PuppySchema()
 puppies_schema = PuppySchema(many=True)
